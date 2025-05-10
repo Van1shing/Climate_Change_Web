@@ -220,15 +220,31 @@ class UserTracker:
 
             # Calculate tab switching metrics
             tab_metrics_query = """
+            WITH tab_times AS (
+                SELECT 
+                    element_id as tab_name,
+                    COUNT(*) as visit_count,
+                    COUNT(DISTINCT session_id) as unique_visitors
+                FROM user_interactions
+                WHERE interaction_type = 'tab_switch'
+                GROUP BY element_id
+            ),
+            tab_durations AS (
+                SELECT 
+                    element_id as tab_name,
+                    AVG(metric_value) as avg_time_spent
+                FROM user_metrics
+                WHERE metric_name = 'tab_time_spent'
+                GROUP BY element_id
+            )
             SELECT 
-                element_id as tab_name,
-                COUNT(*) as visit_count,
-                AVG(time_spent) as avg_time_spent,
-                COUNT(DISTINCT session_id) as unique_visitors
-            FROM user_interactions
-            WHERE interaction_type = 'tab_switch'
-            GROUP BY element_id
-            ORDER BY visit_count DESC
+                t.tab_name,
+                t.visit_count,
+                d.avg_time_spent,
+                t.unique_visitors
+            FROM tab_times t
+            LEFT JOIN tab_durations d ON t.tab_name = d.tab_name
+            ORDER BY t.visit_count DESC
             """
             metrics['tab_metrics'] = self.db.execute_query(tab_metrics_query)
 
