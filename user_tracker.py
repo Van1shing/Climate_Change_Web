@@ -231,19 +231,20 @@ class UserTracker:
             ),
             tab_durations AS (
                 SELECT 
-                    element_id as tab_name,
-                    AVG(metric_value) as avg_time_spent
+                    session_id,
+                    metric_value as time_spent
                 FROM user_metrics
                 WHERE metric_name = 'tab_time_spent'
-                GROUP BY element_id
             )
             SELECT 
                 t.tab_name,
                 t.visit_count,
-                d.avg_time_spent,
+                COALESCE(AVG(d.time_spent), 0) as avg_time_spent,
                 t.unique_visitors
             FROM tab_times t
-            LEFT JOIN tab_durations d ON t.tab_name = d.tab_name
+            LEFT JOIN user_interactions i ON t.tab_name = i.element_id
+            LEFT JOIN tab_durations d ON i.session_id = d.session_id
+            GROUP BY t.tab_name, t.visit_count, t.unique_visitors
             ORDER BY t.visit_count DESC
             """
             metrics['tab_metrics'] = self.db.execute_query(tab_metrics_query)
