@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Tracking Dashboard</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    h1 { font-size: 24px; }
+    .metric { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 8px; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <h1>📊 User Tracking Dashboard</h1>
+  <div id="metrics">
+    <div class="metric"><strong>Average Session Duration:</strong> <span id="avg-duration">Loading...</span> seconds</div>
+    <div class="metric"><strong>Bounce Rate:</strong> <span id="bounce-rate">Loading...</span>%</div>
+    <div class="metric"><strong>Average Time Per Page:</strong> <span id="avg-time">Loading...</span> seconds</div>
+    <div class="metric">
+      <strong>Top Interactions:</strong>
+      <ul id="interactions"></ul>
+    </div>
+  </div>
+
+  <script>
+    fetch("/api/tracking/metrics")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("avg-duration").textContent = data.avg_session_duration ?? "N/A";
+        document.getElementById("bounce-rate").textContent = data.bounce_rate?.toFixed(1) ?? "N/A";
+        document.getElementById("avg-time").textContent = data.avg_time_per_page ?? "N/A";
+
+        const list = document.getElementById("interactions");
+        list.innerHTML = '';
+        if (Array.isArray(data.top_interactions)) {
+          data.top_interactions.forEach(([type, count]) => {
+            const li = document.createElement("li");
+            li.textContent = `${type} (${count})`;
+            list.appendChild(li);
+          });
+        }
+      })
+      .catch(err => {
+        document.getElementById("metrics").textContent = "❌ Failed to load metrics.";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>

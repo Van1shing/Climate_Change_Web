@@ -123,6 +123,11 @@ def get_metrics():
         logger.error(f"Error getting metrics: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/dashboard')
+def dashboard():
+    return render_template("dashboard.html")
+
+
 if __name__ == '__main__':
     app.run(debug=True) 
 
