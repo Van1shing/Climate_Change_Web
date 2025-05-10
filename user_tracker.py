@@ -217,6 +217,42 @@ class UserTracker:
             LIMIT 5
             """
             metrics['top_interactions'] = self.db.execute_query(interaction_query)
+
+            # Calculate tab switching metrics
+            tab_metrics_query = """
+            SELECT 
+                element_id as tab_name,
+                COUNT(*) as visit_count,
+                AVG(time_spent) as avg_time_spent,
+                COUNT(DISTINCT session_id) as unique_visitors
+            FROM user_interactions
+            WHERE interaction_type = 'tab_switch'
+            GROUP BY element_id
+            ORDER BY visit_count DESC
+            """
+            metrics['tab_metrics'] = self.db.execute_query(tab_metrics_query)
+
+            # Calculate tab sequence patterns
+            tab_sequence_query = """
+            WITH tab_sequences AS (
+                SELECT 
+                    session_id,
+                    element_id as current_tab,
+                    LAG(element_id) OVER (PARTITION BY session_id ORDER BY interaction_time) as previous_tab
+                FROM user_interactions
+                WHERE interaction_type = 'tab_switch'
+            )
+            SELECT 
+                previous_tab,
+                current_tab,
+                COUNT(*) as transition_count
+            FROM tab_sequences
+            WHERE previous_tab IS NOT NULL
+            GROUP BY previous_tab, current_tab
+            ORDER BY transition_count DESC
+            LIMIT 10
+            """
+            metrics['tab_sequences'] = self.db.execute_query(tab_sequence_query)
             
             return metrics
         except Exception as e:

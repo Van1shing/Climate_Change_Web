@@ -184,6 +184,8 @@
                 this.lastInteractionTime = Date.now();
                 this.scrollDepth = 0;
                 this.interactions = [];
+                this.currentTab = null;
+                this.tabViewTimes = {};
                 this.initializeTracking();
             }
 
@@ -203,6 +205,11 @@
                 // Track form interactions
                 document.querySelectorAll('form').forEach(form => {
                     form.addEventListener('submit', (e) => this.trackFormSubmit(e));
+                });
+
+                // Track tab switching
+                document.querySelectorAll('a[href^="#"]').forEach(link => {
+                    link.addEventListener('click', (e) => this.trackTabSwitch(e));
                 });
                 
                 // Track beforeunload
@@ -289,6 +296,38 @@
                 };
                 this.interactions.push(interaction);
                 this.recordInteraction(interaction);
+            }
+
+            trackTabSwitch(event) {
+                const targetId = event.target.getAttribute('href').substring(1);
+                const currentTime = Date.now();
+                
+                // Record time spent on previous tab
+                if (this.currentTab) {
+                    const timeSpent = Math.floor((currentTime - this.tabViewTimes[this.currentTab]) / 1000);
+                    this.recordMetric('tab_time_spent', timeSpent);
+                    this.recordInteraction({
+                        type: 'tab_leave',
+                        element_id: this.currentTab,
+                        element_type: 'section',
+                        time_spent: timeSpent
+                    });
+                }
+
+                // Start tracking new tab
+                this.currentTab = targetId;
+                this.tabViewTimes[targetId] = currentTime;
+                
+                // Record tab switch interaction
+                this.recordInteraction({
+                    type: 'tab_switch',
+                    element_id: targetId,
+                    element_type: 'section',
+                    from_tab: this.currentTab
+                });
+
+                // Track scroll depth for the new tab
+                this.trackScroll();
             }
 
             async recordInteraction(interaction) {

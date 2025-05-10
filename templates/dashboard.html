@@ -4,39 +4,117 @@
   <meta charset="UTF-8">
   <title>User Tracking Dashboard</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-    h1 { font-size: 24px; }
+    body { font-family: sans-serif; padding: 20px; max-width: 1200px; margin: auto; }
+    h1, h2 { font-size: 24px; margin-top: 30px; }
     .metric { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 8px; }
-    ul { padding-left: 20px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .tab-metrics { margin-top: 20px; }
+    .tab-metrics table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .tab-metrics th, .tab-metrics td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+    .tab-metrics th { background: #f5f5f5; }
+    .tab-sequences { margin-top: 20px; }
+    .tab-sequences table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .tab-sequences th, .tab-sequences td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+    .tab-sequences th { background: #f5f5f5; }
   </style>
 </head>
 <body>
   <h1>📊 User Tracking Dashboard</h1>
-  <div id="metrics">
-    <div class="metric"><strong>Average Session Duration:</strong> <span id="avg-duration">Loading...</span> seconds</div>
-    <div class="metric"><strong>Bounce Rate:</strong> <span id="bounce-rate">Loading...</span>%</div>
-    <div class="metric"><strong>Average Time Per Page:</strong> <span id="avg-time">Loading...</span> seconds</div>
+  
+  <div class="metric-grid">
     <div class="metric">
-      <strong>Top Interactions:</strong>
-      <ul id="interactions"></ul>
+      <strong>Average Session Duration:</strong> <span id="avg-duration">Loading...</span> seconds
     </div>
+    <div class="metric">
+      <strong>Bounce Rate:</strong> <span id="bounce-rate">Loading...</span>%
+    </div>
+    <div class="metric">
+      <strong>Average Time Per Page:</strong> <span id="avg-time">Loading...</span> seconds
+    </div>
+  </div>
+
+  <div class="metric">
+    <strong>Top Interactions:</strong>
+    <ul id="interactions"></ul>
+  </div>
+
+  <div class="tab-metrics">
+    <h2>Tab Usage Metrics</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tab Name</th>
+          <th>Visit Count</th>
+          <th>Avg. Time Spent</th>
+          <th>Unique Visitors</th>
+        </tr>
+      </thead>
+      <tbody id="tab-metrics"></tbody>
+    </table>
+  </div>
+
+  <div class="tab-sequences">
+    <h2>Tab Navigation Patterns</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>From Tab</th>
+          <th>To Tab</th>
+          <th>Transition Count</th>
+        </tr>
+      </thead>
+      <tbody id="tab-sequences"></tbody>
+    </table>
   </div>
 
   <script>
     fetch("/api/tracking/metrics")
       .then(res => res.json())
       .then(data => {
-        document.getElementById("avg-duration").textContent = data.avg_session_duration ?? "N/A";
+        // Update basic metrics
+        document.getElementById("avg-duration").textContent = data.avg_session_duration?.toFixed(1) ?? "N/A";
         document.getElementById("bounce-rate").textContent = data.bounce_rate?.toFixed(1) ?? "N/A";
-        document.getElementById("avg-time").textContent = data.avg_time_per_page ?? "N/A";
+        document.getElementById("avg-time").textContent = data.avg_time_per_page?.toFixed(1) ?? "N/A";
 
-        const list = document.getElementById("interactions");
-        list.innerHTML = '';
+        // Update interactions list
+        const interactionsList = document.getElementById("interactions");
+        interactionsList.innerHTML = '';
         if (Array.isArray(data.top_interactions)) {
           data.top_interactions.forEach(([type, count]) => {
             const li = document.createElement("li");
             li.textContent = `${type} (${count})`;
-            list.appendChild(li);
+            interactionsList.appendChild(li);
+          });
+        }
+
+        // Update tab metrics
+        const tabMetricsBody = document.getElementById("tab-metrics");
+        tabMetricsBody.innerHTML = '';
+        if (Array.isArray(data.tab_metrics)) {
+          data.tab_metrics.forEach(([tabName, visitCount, avgTime, uniqueVisitors]) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${tabName}</td>
+              <td>${visitCount}</td>
+              <td>${avgTime?.toFixed(1) ?? 'N/A'} seconds</td>
+              <td>${uniqueVisitors}</td>
+            `;
+            tabMetricsBody.appendChild(row);
+          });
+        }
+
+        // Update tab sequences
+        const tabSequencesBody = document.getElementById("tab-sequences");
+        tabSequencesBody.innerHTML = '';
+        if (Array.isArray(data.tab_sequences)) {
+          data.tab_sequences.forEach(([fromTab, toTab, count]) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${fromTab}</td>
+              <td>${toTab}</td>
+              <td>${count}</td>
+            `;
+            tabSequencesBody.appendChild(row);
           });
         }
       })
