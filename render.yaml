@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: user-tracker-app
+    runtime: python
+    buildCommand: ""
+    startCommand: "gunicorn app:app"

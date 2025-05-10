@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Change Data Visualization</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Climate Change Data</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#data">Data Analysis</a></li>
+                <li><a href="#visualizations">Visualizations</a></li>
+                <li><a href="#solutions">Solutions</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Understanding Climate Change</h1>
+            <p>Explore data-driven insights into global climate trends and their impacts</p>
+        </div>
+    </section>
+
+    <section id="data" class="data-section">
+        <div class="container">
+            <h2>Climate Data Analysis</h2>
+            <div class="chart-container">
+                <h3>Global Temperature Trends</h3>
+                <canvas id="temperatureChart"></canvas>
+                <p class="chart-description">Global temperature anomalies from pre-industrial baseline (1880-1900)</p>
+                <div class="analysis-section">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>The global temperature anomaly shows a clear upward trend, with the most significant warming occurring since the 1970s (NASA, 2023).</li>
+                        <li>Recent years have consistently shown anomalies above 1°C, indicating accelerated warming (NOAA, 2023).</li>
+                        <li>The trend suggests we are approaching the critical 1.5°C threshold set by the Paris Agreement (IPCC, 2022).</li>
+                    </ul>
+                    <h4>Implications:</h4>
+                    <ul>
+                        <li>Rising temperatures are leading to more frequent and intense heatwaves (World Meteorological Organization, 2023).</li>
+                        <li>Melting ice caps and glaciers are contributing to sea level rise (IPCC, 2022).</li>
+                        <li>Changes in temperature patterns are affecting ecosystems and biodiversity (IPBES, 2023).</li>
+                    </ul>
+                    <div class="sources">
+                        <h4>Sources:</h4>
+                        <ul>
+                            <li><a href="https://climate.nasa.gov/vital-signs/global-temperature/" target="_blank">NASA Global Climate Change (2023). Global Temperature.</a></li>
+                            <li><a href="https://www.ncdc.noaa.gov/monitoring-references/faq/anomalies.php" target="_blank">NOAA National Centers for Environmental Information (2023). Global Temperature Anomalies.</a></li>
+                            <li><a href="https://www.ipcc.ch/report/ar6/wg1/" target="_blank">IPCC (2022). Climate Change 2022: The Physical Science Basis.</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Greenhouse Gas Emissions</h3>
+                <canvas id="ghgChart"></canvas>
+                <p class="chart-description">U.S. greenhouse gas emissions by gas type (1990-2020)</p>
+                <div class="analysis-section">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>Carbon dioxide remains the dominant greenhouse gas, accounting for the majority of emissions (EPA, 2023).</li>
+                        <li>While total emissions have shown some fluctuations, they remain significantly above 1990 levels (UNFCCC, 2023).</li>
+                        <li>Methane emissions, though smaller in volume, have a much higher global warming potential (IPCC, 2022).</li>
+                    </ul>
+                    <h4>Implications:</h4>
+                    <ul>
+                        <li>Continued high emissions levels indicate insufficient progress in reducing greenhouse gases (UNEP, 2023).</li>
+                        <li>The mix of different gases shows the need for targeted reduction strategies for each type (EPA, 2023).</li>
+                        <li>Recent policy changes and technological advances may help reduce future emissions (IEA, 2023).</li>
+                    </ul>
+                    <div class="sources">
+                        <h4>Sources:</h4>
+                        <ul>
+                            <li><a href="https://www.epa.gov/ghgemissions/inventory-us-greenhouse-gas-emissions-and-sinks" target="_blank">EPA (2023). Inventory of U.S. Greenhouse Gas Emissions and Sinks.</a></li>
+                            <li><a href="https://unfccc.int/ghg-inventories-annex-i-parties/2023" target="_blank">UNFCCC (2023). Greenhouse Gas Inventory Data.</a></li>
+                            <li><a href="https://www.iea.org/reports/global-energy-review-2023" target="_blank">IEA (2023). Global Energy Review 2023.</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="visualizations" class="visualizations-section">
+        <div class="container">
+            <h2>Climate Impact Visualizations</h2>
+            <div class="impact-regions">
+                <h3>Regions Most Affected by Climate Change</h3>
+                <div class="regions-grid">
+                    {% for region in climate_data.impact_regions %}
+                    <div class="region-card">
+                        <h4>{{ region.name }}</h4>
+                        <p>{{ region.impact }}</p>
+                        <div class="severity {{ region.severity.lower() }}">{{ region.severity }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="timeline">
+                <h3>Timeline of Climate Events</h3>
+                <div class="timeline-container">
+                    {% for event in climate_data.climate_events %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">{{ event.year }}</div>
+                            <div class="timeline-event">
+                                <h4>{{ event.event }}</h4>
+                                <p>{{ event.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="solutions" class="solutions-section">
+        <div class="container">
+            <h2>Climate Solutions</h2>
+            <div class="solutions-grid">
+                <div class="solution-card">
+                    <h3>Individual Actions</h3>
+                    <ul>
+                        <li>Reduce energy consumption</li>
+                        <li>Use public transportation or electric vehicles</li>
+                        <li>Adopt a plant-based diet</li>
+                        <li>Reduce waste and recycle</li>
+                    </ul>
+                </div>
+                <div class="solution-card">
+                    <h3>Community Initiatives</h3>
+                    <ul>
+                        <li>Support local renewable energy projects</li>
+                        <li>Participate in community gardens</li>
+                        <li>Advocate for climate-friendly policies</li>
+                        <li>Join environmental organizations</li>
+                    </ul>
+                </div>
+                <div class="solution-card">
+                    <h3>Global Policies</h3>
+                    <ul>
+                        <li>Implement carbon pricing</li>
+                        <li>Invest in renewable energy infrastructure</li>
+                        <li>Protect forests and natural carbon sinks</li>
+                        <li>Support climate adaptation in vulnerable regions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2>About This Project</h2>
+            <p>This website visualizes climate change data to help understand the current state of our planet and the urgent need for action. The data presented comes from reliable sources including NASA, NOAA, and the EPA.</p>
+            <p>Our goal is to make climate science accessible and to inspire action at all levels - from individual choices to global policy changes.</p>
+            <div class="author-info">
+                <p>Created by <strong>Yifan Bai</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Climate Change Data Visualization. Created by Yifan Bai. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // User tracking functionality
+        class UserTracker {
+            constructor() {
+                this.sessionId = null;
+                this.pageLoadTime = Date.now();
+                this.lastInteractionTime = Date.now();
+                this.scrollDepth = 0;
+                this.interactions = [];
+                this.initializeTracking();
+            }
+
+            initializeTracking() {
+                // Start session
+                this.startSession();
+                
+                // Track page visibility
+                document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+                
+                // Track scrolling
+                window.addEventListener('scroll', () => this.trackScroll());
+                
+                // Track clicks
+                document.addEventListener('click', (e) => this.trackClick(e));
+                
+                // Track form interactions
+                document.querySelectorAll('form').forEach(form => {
+                    form.addEventListener('submit', (e) => this.trackFormSubmit(e));
+                });
+                
+                // Track beforeunload
+                window.addEventListener('beforeunload', () => this.endSession());
+            }
+
+            async startSession() {
+                try {
+                    const response = await fetch('/api/tracking/start-session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_agent: navigator.userAgent,
+                            referrer: document.referrer
+                        })
+                    });
+                    const data = await response.json();
+                    this.sessionId = data.session_id;
+                } catch (error) {
+                    console.error('Error starting session:', error);
+                }
+            }
+
+            async endSession() {
+                if (!this.sessionId) return;
+                
+                try {
+                    const timeSpent = Math.floor((Date.now() - this.pageLoadTime) / 1000);
+                    await fetch('/api/tracking/end-session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: this.sessionId,
+                            time_spent: timeSpent,
+                            scroll_depth: this.scrollDepth,
+                            interactions: this.interactions
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error ending session:', error);
+                }
+            }
+
+            handleVisibilityChange() {
+                if (document.hidden) {
+                    this.lastInteractionTime = Date.now();
+                } else {
+                    const timeAway = Math.floor((Date.now() - this.lastInteractionTime) / 1000);
+                    this.recordMetric('time_away', timeAway);
+                }
+            }
+
+            trackScroll() {
+                const scrollPercent = Math.round((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100);
+                if (scrollPercent > this.scrollDepth) {
+                    this.scrollDepth = scrollPercent;
+                    this.recordMetric('scroll_depth', scrollPercent);
+                }
+            }
+
+            trackClick(event) {
+                const element = event.target;
+                const interaction = {
+                    type: 'click',
+                    element_id: element.id || element.className,
+                    element_type: element.tagName.toLowerCase(),
+                    timestamp: Date.now()
+                };
+                this.interactions.push(interaction);
+                this.recordInteraction(interaction);
+            }
+
+            trackFormSubmit(event) {
+                const form = event.target;
+                const interaction = {
+                    type: 'form_submit',
+                    element_id: form.id || form.className,
+                    element_type: 'form',
+                    timestamp: Date.now()
+                };
+                this.interactions.push(interaction);
+                this.recordInteraction(interaction);
+            }
+
+            async recordInteraction(interaction) {
+                if (!this.sessionId) return;
+                
+                try {
+                    await fetch('/api/tracking/interaction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: this.sessionId,
+                            ...interaction
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error recording interaction:', error);
+                }
+            }
+
+            async recordMetric(name, value) {
+                if (!this.sessionId) return;
+                
+                try {
+                    await fetch('/api/tracking/metric', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: this.sessionId,
+                            metric_name: name,
+                            metric_value: value
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error recording metric:', error);
+                }
+            }
+        }
+
+        // Initialize user tracking
+        const userTracker = new UserTracker();
+
+        // Get climate data from Flask
+        const climateData = {{ climate_data|tojson|safe }};
+        
+        // Temperature Chart
+        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+        new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                labels: climateData.temperature.years,
+                datasets: [{
+                    label: 'Temperature Anomaly (°C)',
+                    data: climateData.temperature.anomalies,
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Global Temperature Anomaly (1880-Present)'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Anomaly: ${context.parsed.y.toFixed(2)}°C`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature Anomaly (°C)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Greenhouse Gas Chart
+        const ghgCtx = document.getElementById('ghgChart').getContext('2d');
+        new Chart(ghgCtx, {
+            type: 'bar',
+            data: {
+                labels: climateData.greenhouse_gas.years,
+                datasets: [
+                    {
+                        label: 'Carbon Dioxide',
+                        data: climateData.greenhouse_gas.by_gas.carbon_dioxide,
+                        backgroundColor: '#e74c3c',
+                        stack: 'stack0'
+                    },
+                    {
+                        label: 'Methane',
+                        data: climateData.greenhouse_gas.by_gas.methane,
+                        backgroundColor: '#f39c12',
+                        stack: 'stack0'
+                    },
+                    {
+                        label: 'Nitrous Oxide',
+                        data: climateData.greenhouse_gas.by_gas.nitrous_oxide,
+                        backgroundColor: '#3498db',
+                        stack: 'stack0'
+                    },
+                    {
+                        label: 'Other Gases',
+                        data: climateData.greenhouse_gas.by_gas.other,
+                        backgroundColor: '#2ecc71',
+                        stack: 'stack0'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'U.S. Greenhouse Gas Emissions by Gas Type'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Million Metric Tons CO₂ Equivalent'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
