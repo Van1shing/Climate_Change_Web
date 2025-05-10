@@ -123,67 +123,6 @@ def get_metrics():
         logger.error(f"Error getting metrics: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/debug/init-user-tracking')
-def debug_create_user_tracking_tables():
-    try:
-        from db_connection import DatabaseConnection
-        import os
-
-        # 让路径明确指向项目根目录的 climate_data.db
-        db_path = os.path.join(os.path.dirname(__file__), 'climate_data.db')
-        db = DatabaseConnection(db_path)
-        db.connect()
-
-        schema = """
-        CREATE TABLE IF NOT EXISTS user_sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id VARCHAR(100) NOT NULL UNIQUE,
-            user_agent TEXT,
-            ip_address VARCHAR(45),
-            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            end_time TIMESTAMP,
-            referrer TEXT,
-            device_type VARCHAR(50),
-            browser VARCHAR(100),
-            os VARCHAR(100)
-        );
-
-        CREATE TABLE IF NOT EXISTS page_views (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id VARCHAR(100) NOT NULL,
-            page_url TEXT NOT NULL,
-            view_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            time_spent INTEGER,
-            scroll_depth INTEGER,
-            FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
-        );
-
-        CREATE TABLE IF NOT EXISTS user_interactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id VARCHAR(100) NOT NULL,
-            interaction_type VARCHAR(50) NOT NULL,
-            element_id TEXT,
-            element_type TEXT,
-            interaction_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
-        );
-
-        CREATE TABLE IF NOT EXISTS user_metrics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id VARCHAR(100) NOT NULL,
-            metric_name VARCHAR(50) NOT NULL,
-            metric_value REAL,
-            recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
-        );
-        """
-
-        db.conn.executescript(schema)
-        db.disconnect()
-        return jsonify({'status': '✅ User tracking tables created successfully'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 if __name__ == '__main__':
     app.run(debug=True) 
 
