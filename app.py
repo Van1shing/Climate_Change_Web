@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 from data_processor import get_all_climate_data
 from user_tracker import UserTracker
 import logging
+from db_connection import DatabaseConnection
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -9,6 +10,21 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 user_tracker = UserTracker()
+
+def initialize_database():
+    try:
+        db = DatabaseConnection("climate_data.db")
+        db.connect()
+        with open("schema.sql", "r") as f:
+            schema = f.read()
+            db.conn.executescript(schema)
+        db.disconnect()
+        print("✅ Database initialized successfully.")
+    except Exception as e:
+        print(f"❌ Failed to initialize database: {e}")
+
+initialize_database()
+
 
 @app.route('/')
 def index():
