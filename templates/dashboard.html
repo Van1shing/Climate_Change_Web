@@ -23,19 +23,11 @@
   
   <div class="metric-grid">
     <div class="metric">
-      <strong>Average Session Duration:</strong> <span id="avg-duration">Loading...</span> seconds
-    </div>
-    <div class="metric">
       <strong>Bounce Rate:</strong> <span id="bounce-rate">Loading...</span>%
     </div>
     <div class="metric">
       <strong>Average Time Per Page:</strong> <span id="avg-time">Loading...</span> seconds
     </div>
-  </div>
-
-  <div class="metric">
-    <strong>Top Interactions:</strong>
-    <ul id="interactions"></ul>
   </div>
 
   <div class="tab-metrics">
@@ -72,20 +64,8 @@
       .then(res => res.json())
       .then(data => {
         // Update basic metrics
-        document.getElementById("avg-duration").textContent = data.avg_session_duration?.toFixed(1) ?? "N/A";
         document.getElementById("bounce-rate").textContent = data.bounce_rate?.toFixed(1) ?? "N/A";
         document.getElementById("avg-time").textContent = data.avg_time_per_page?.toFixed(1) ?? "N/A";
-
-        // Update interactions list
-        const interactionsList = document.getElementById("interactions");
-        interactionsList.innerHTML = '';
-        if (Array.isArray(data.top_interactions)) {
-          data.top_interactions.forEach(([type, count]) => {
-            const li = document.createElement("li");
-            li.textContent = `${type} (${count})`;
-            interactionsList.appendChild(li);
-          });
-        }
 
         // Update tab metrics
         const tabMetricsBody = document.getElementById("tab-metrics");
@@ -118,9 +98,8 @@
           });
         }
       })
-      .catch(err => {
-        document.getElementById("metrics").textContent = "❌ Failed to load metrics.";
-        console.error(err);
+      .catch(error => {
+        console.error("Error fetching metrics:", error);
       });
   </script>
 </body>

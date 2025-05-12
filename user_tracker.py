@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 
 class UserTracker:
     def __init__(self, db_path: str = "climate_data.db"):
-        """Initialize the user tracker with database connection."""
-        self.db = DatabaseConnection(db_path)
-        self.db.connect()
+        """Initialize the user tracker with database path."""
+        self.db_path = db_path
 
-    def __del__(self):
-        """Clean up database connection."""
-        if hasattr(self, 'db'):
-            self.db.disconnect()
+    def _get_db(self):
+        """Get a new database connection."""
+        db = DatabaseConnection(self.db_path)
+        db.connect()
+        return db
 
     def _generate_session_id(self, user_agent: str, ip_address: str) -> str:
         """Generate a unique session ID based on user agent and IP."""
@@ -56,8 +56,12 @@ class UserTracker:
                 ua.os.family
             )
             
-            self.db.execute_query(query, params)
-            return session_id
+            db = self._get_db()
+            try:
+                db.execute_query(query, params)
+                return session_id
+            finally:
+                db.disconnect()
             
         except Exception as e:
             logger.error(f"Error starting session: {e}")
@@ -71,7 +75,11 @@ class UserTracker:
             SET end_time = CURRENT_TIMESTAMP
             WHERE session_id = ?
             """
-            self.db.execute_query(query, (session_id,))
+            db = self._get_db()
+            try:
+                db.execute_query(query, (session_id,))
+            finally:
+                db.disconnect()
         except Exception as e:
             logger.error(f"Error ending session: {e}")
             raise
@@ -91,7 +99,11 @@ class UserTracker:
                 page_data.get('scroll_depth', 0)
             )
             
-            self.db.execute_query(query, params)
+            db = self._get_db()
+            try:
+                db.execute_query(query, params)
+            finally:
+                db.disconnect()
         except Exception as e:
             logger.error(f"Error recording page view: {e}")
             raise
@@ -111,7 +123,11 @@ class UserTracker:
                 interaction_data.get('element_type', '')
             )
             
-            self.db.execute_query(query, params)
+            db = self._get_db()
+            try:
+                db.execute_query(query, params)
+            finally:
+                db.disconnect()
         except Exception as e:
             logger.error(f"Error recording interaction: {e}")
             raise
@@ -126,7 +142,11 @@ class UserTracker:
             """
             params = (session_id, metric_name, metric_value)
             
-            self.db.execute_query(query, params)
+            db = self._get_db()
+            try:
+                db.execute_query(query, params)
+            finally:
+                db.disconnect()
         except Exception as e:
             logger.error(f"Error recording metric: {e}")
             raise
@@ -138,25 +158,25 @@ class UserTracker:
             session_query = """
             SELECT * FROM user_sessions WHERE session_id = ?
             """
-            session_data = self.db.execute_query(session_query, (session_id,))[0]
+            session_data = self._get_db().execute_query(session_query, (session_id,))[0]
             
             # Get page views
             page_views_query = """
             SELECT * FROM page_views WHERE session_id = ?
             """
-            page_views = self.db.execute_query(page_views_query, (session_id,))
+            page_views = self._get_db().execute_query(page_views_query, (session_id,))
             
             # Get interactions
             interactions_query = """
             SELECT * FROM user_interactions WHERE session_id = ?
             """
-            interactions = self.db.execute_query(interactions_query, (session_id,))
+            interactions = self._get_db().execute_query(interactions_query, (session_id,))
             
             # Get metrics
             metrics_query = """
             SELECT * FROM user_metrics WHERE session_id = ?
             """
-            metrics = self.db.execute_query(metrics_query, (session_id,))
+            metrics = self._get_db().execute_query(metrics_query, (session_id,))
             
             return {
                 'session': session_data,
@@ -181,9 +201,9 @@ class UserTracker:
             """
             if start_date:
                 duration_query += " AND start_time >= ?"
-                metrics['avg_session_duration'] = self.db.execute_query(duration_query, (start_date,))[0][0]
+                metrics['avg_session_duration'] = self._get_db().execute_query(duration_query, (start_date,))[0][0]
             else:
-                metrics['avg_session_duration'] = self.db.execute_query(duration_query)[0][0]
+                metrics['avg_session_duration'] = self._get_db().execute_query(duration_query)[0][0]
             
             # Calculate bounce rate (sessions with only one page view)
             bounce_query = """
@@ -195,7 +215,7 @@ class UserTracker:
                 GROUP BY session_id
             )
             """
-            metrics['bounce_rate'] = self.db.execute_query(bounce_query)[0][0]
+            metrics['bounce_rate'] = self._get_db().execute_query(bounce_query)[0][0]
             
             # Calculate average time spent per page
             time_query = """
@@ -204,9 +224,9 @@ class UserTracker:
             """
             if start_date:
                 time_query += " WHERE view_time >= ?"
-                metrics['avg_time_per_page'] = self.db.execute_query(time_query, (start_date,))[0][0]
+                metrics['avg_time_per_page'] = self._get_db().execute_query(time_query, (start_date,))[0][0]
             else:
-                metrics['avg_time_per_page'] = self.db.execute_query(time_query)[0][0]
+                metrics['avg_time_per_page'] = self._get_db().execute_query(time_query)[0][0]
             
             # Calculate most common interactions
             interaction_query = """
@@ -216,7 +236,7 @@ class UserTracker:
             ORDER BY count DESC
             LIMIT 5
             """
-            metrics['top_interactions'] = self.db.execute_query(interaction_query)
+            metrics['top_interactions'] = self._get_db().execute_query(interaction_query)
 
             # Calculate tab switching metrics
             tab_metrics_query = """
@@ -247,7 +267,7 @@ class UserTracker:
             GROUP BY t.tab_name, t.visit_count, t.unique_visitors
             ORDER BY t.visit_count DESC
             """
-            metrics['tab_metrics'] = self.db.execute_query(tab_metrics_query)
+            metrics['tab_metrics'] = self._get_db().execute_query(tab_metrics_query)
 
             # Calculate tab sequence patterns
             tab_sequence_query = """
@@ -269,7 +289,7 @@ class UserTracker:
             ORDER BY transition_count DESC
             LIMIT 10
             """
-            metrics['tab_sequences'] = self.db.execute_query(tab_sequence_query)
+            metrics['tab_sequences'] = self._get_db().execute_query(tab_sequence_query)
             
             return metrics
         except Exception as e:

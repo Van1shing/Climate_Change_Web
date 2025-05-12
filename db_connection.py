@@ -17,7 +17,7 @@ class DatabaseConnection:
     def connect(self):
         """Establish database connection."""
         try:
-            self.conn = sqlite3.connect(self.db_path)
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             self.cursor = self.conn.cursor()
             logger.info("Database connection established successfully")
         except sqlite3.Error as e:
@@ -34,6 +34,7 @@ class DatabaseConnection:
         """Execute a SQL query and return results."""
         try:
             self.cursor.execute(query, params)
+            self.conn.commit()
             return self.cursor.fetchall()
         except sqlite3.Error as e:
             logger.error(f"Error executing query: {e}")

@@ -186,6 +186,7 @@
                 this.interactions = [];
                 this.currentTab = null;
                 this.tabViewTimes = {};
+                this.retryCount = 3;  // Number of retries for failed requests
                 this.initializeTracking();
             }
 
@@ -216,9 +217,27 @@
                 window.addEventListener('beforeunload', () => this.endSession());
             }
 
+            async makeRequest(url, options, retries = this.retryCount) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (retries > 0) {
+                        console.log(`Retrying request to ${url}, ${retries} attempts left`);
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                        return this.makeRequest(url, options, retries - 1);
+                    }
+                    console.error(`Failed to make request to ${url}:`, error);
+                    throw error;
+                }
+            }
+
             async startSession() {
                 try {
-                    const response = await fetch('/api/tracking/start-session', {
+                    const data = await this.makeRequest('/api/tracking/start-session', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -228,8 +247,8 @@
                             referrer: document.referrer
                         })
                     });
-                    const data = await response.json();
                     this.sessionId = data.session_id;
+                    console.log('Session started:', this.sessionId);
                 } catch (error) {
                     console.error('Error starting session:', error);
                 }
@@ -240,7 +259,7 @@
                 
                 try {
                     const timeSpent = Math.floor((Date.now() - this.pageLoadTime) / 1000);
-                    await fetch('/api/tracking/end-session', {
+                    await this.makeRequest('/api/tracking/end-session', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -252,6 +271,7 @@
                             interactions: this.interactions
                         })
                     });
+                    console.log('Session ended:', this.sessionId);
                 } catch (error) {
                     console.error('Error ending session:', error);
                 }
@@ -334,7 +354,7 @@
                 if (!this.sessionId) return;
                 
                 try {
-                    await fetch('/api/tracking/interaction', {
+                    await this.makeRequest('/api/tracking/interaction', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -344,6 +364,7 @@
                             ...interaction
                         })
                     });
+                    console.log('Interaction recorded:', interaction);
                 } catch (error) {
                     console.error('Error recording interaction:', error);
                 }
@@ -353,7 +374,7 @@
                 if (!this.sessionId) return;
                 
                 try {
-                    await fetch('/api/tracking/metric', {
+                    await this.makeRequest('/api/tracking/metric', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -364,6 +385,7 @@
                             metric_value: value
                         })
                     });
+                    console.log('Metric recorded:', name, value);
                 } catch (error) {
                     console.error('Error recording metric:', error);
                 }
